@@ -157,7 +157,7 @@ def main():
         print(
             "ERROR: You must supply at a minimum the method (convert or merge), a file or files, and a target format"
         )
-        exit()
+        return 1
 
     parser = argparse.ArgumentParser()
 
@@ -214,6 +214,8 @@ def main():
         files_list = prepare_files_list(args.data)
         for file in files_list:
             clean_ttl(file)
+
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
