@@ -153,7 +153,7 @@ def clean_ttl(input_file_path:Path):
 
 
 def main():
-    if "-h" not in sys.argv and len(sys.argv) < 3:
+    if "-h" not in sys.argv and "--help" not in sys.argv and len(sys.argv) < 3:
         print(
             "ERROR: You must supply at a minimum the method (convert or merge), a file or files, and a target format"
         )
