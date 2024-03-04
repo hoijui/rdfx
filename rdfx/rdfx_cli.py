@@ -5,31 +5,10 @@ from pathlib import Path
 from typing import List
 
 import rdflib
-
-from rdfx.persistence_systems import File, PersistenceSystem, prepare_files_list
 from rdflib import Graph, util
 
-RDF_FILE_ENDINGS = {
-    "ttl": "turtle",
-    "turtle": "turtle",
-    "json": "json-ld",
-    "json-ld": "json-ld",
-    "jsonld": "json-ld",
-    "owl": "xml",
-    "xml": "xml",
-    "rdf": "xml",
-    "nt": "nt",
-    "n3": "n3",
-}
-
-OUTPUT_FILE_ENDINGS = {
-    "turtle": "ttl",
-    "xml": "xml",
-    "json-ld": "json-ld",
-    "nt": "nt",
-    "n3": "n3",
-}
-
+from rdfx.constants import RDF_FILE_ENDINGS, OUTPUT_FILE_ENDINGS
+from rdfx.persistence_systems import File, PersistenceSystem, prepare_files_list
 
 def get_input_format(file_path):
     input_format = util.guess_format(str(file_path))
@@ -39,7 +18,7 @@ def get_input_format(file_path):
             input_format = "json-ld"
         else:
             raise Exception(
-                "ERROR: Cannot guess the RDF format of input file {}".format(file_path)
+                f"ERROR: Cannot guess the RDF format of input file {file_path}"
             )
 
     return input_format
@@ -54,7 +33,7 @@ def make_output_file_path(input_file_path, input_format, output_format, in_place
     output_file_name = output_file_name + "." + OUTPUT_FILE_ENDINGS.get(output_format)
 
     output_path = input_file_path.parent / output_file_name
-    print("output file: {}".format(output_path))
+    print(f"output file: {output_path}")
     return output_path
 
 
@@ -96,15 +75,16 @@ def merge(
 
 def persist_to(persistence_system: PersistenceSystem, g: Graph):
     if not issubclass(type(persistence_system), PersistenceSystem):
-        return ValueError(
-            f"You must select of the the subclasses of PersistenceSystem to use for the persistence_system argument"
+        raise ValueError(
+            "You must select of the the subclasses of PersistenceSystem to use for the persistence_system argument"
         )
-    else:
-        persistence_system.write(g)
+    persistence_system.write(g)
 
-# removes unused namespace entries and re-serializes a graph with the prefixes in sorted order
-def clean_ttl(input_file_path:Path):
-    #get a list of all leading comments in the file
+def get_leading_comments(input_file_path:Path):
+    """
+    Returns a list of all leading comments in the file.
+    """
+
     comments_list = []
     comment_flag = False
     with open(input_file_path, "r", encoding='utf-8', errors='ignore') as f:
@@ -122,12 +102,18 @@ def clean_ttl(input_file_path:Path):
             elif not comment_flag:
                 break
 
-    g = Graph()
-    g.parse(input_file_path)
-    all_ns = [n for n in g.namespaces()]
-    subjects = [s for s in g.subjects()]
-    predicates = [p for p in g.predicates()]
-    objects = [o for o in g.objects()]
+    return comments_list
+
+def get_sorted_namespaces(g:Graph):
+    """
+    Extracts the list of used name-spaces from the grah,
+    in sorted order.
+    """
+
+    all_ns = list(g.namespaces())
+    subjects = list(g.subjects())
+    predicates = list(g.predicates())
+    objects = list(g.objects())
     all_prefixes = set(subjects + predicates + objects)
     used_namespace = []
     for full_prefix in all_prefixes:
@@ -137,6 +123,21 @@ def clean_ttl(input_file_path:Path):
 
     used_namespace = list(set(used_namespace))
     used_namespace.sort(key=lambda tup: tup[0])
+
+    return used_namespace
+
+def clean_ttl(input_file_path:Path):
+    """
+    Removes unused namespace entries
+    and re-serializes a graph
+    with the prefixes in sorted order.
+    """
+
+    comments_list = get_leading_comments(input_file_path)
+
+    g = Graph()
+    g.parse(input_file_path)
+    used_namespace = get_sorted_namespaces(g)
     f = rdflib.Graph()
     for name in used_namespace:
         f.bind(name[0], name[1])
@@ -151,11 +152,10 @@ def clean_ttl(input_file_path:Path):
     else:
         ps.write(g=g, filename=input_file_path.stem)
 
-
 def main():
     if "-h" not in sys.argv and "--help" not in sys.argv and len(sys.argv) < 3:
         print(
-            "ERROR: You must supply at a minimum the method (convert or merge), a file or files, and a target format"
+            "ERROR: You must supply at a minimum the method (convert, merge or clean), a file or files, and a target format"
         )
         return 1
 

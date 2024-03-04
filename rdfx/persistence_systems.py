@@ -9,7 +9,7 @@ from http import HTTPStatus
 from io import BytesIO, StringIO
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import List, Literal, Optional, Tuple, Union, get_args
+from typing import Literal, Optional, Tuple, Union, get_args
 from urllib.parse import parse_qs
 
 import boto3
@@ -17,22 +17,10 @@ import httpx
 from botocore.errorfactory import ClientError
 from rdflib import Graph, URIRef
 
+from rdfx.constants import RDF_FILE_ENDINGS
+
 RDF_FORMATS = Literal["ttl", "turtle", "xml", "json-ld", "nt", "n3"]
 VALID_RDF_FORMATS: Tuple[RDF_FORMATS, ...] = get_args(RDF_FORMATS)
-
-RDF_FILE_ENDINGS = {
-    "ttl": "turtle",
-    "turtle": "turtle",
-    "json": "json-ld",
-    "json-ld": "json-ld",
-    "jsonld": "json-ld",
-    "owl": "xml",
-    "xml": "xml",
-    "rdf": "xml",
-    "nt": "nt",
-    "n3": "n3",
-}
-
 
 class PersistenceSystem(ABC):
     def __init__(self):
@@ -68,11 +56,11 @@ class PersistenceSystem(ABC):
         if leading_comments is not None:
             if rdf_format not in ("turtle", "ttl"):
                 raise ValueError(
-                    f"If leading_comments is provided, rdf_format must be turtle"
+                    "If leading_comments is provided, rdf_format must be turtle"
                 )
             if any(lc.startswith("#") for lc in leading_comments):
                 raise ValueError(
-                    f"leading_comments may not start with #. It will be added"
+                    "leading_comments may not start with #. It will be added"
                 )
 
     @staticmethod
@@ -84,18 +72,20 @@ class PersistenceSystem(ABC):
 
     @staticmethod
     def generate_string(g, rdf_format, leading_comments):
-        # validate the RDF format - all methods utilise the 'generate_string' static method so this will always be
-        # called
-        # PersistenceSystem.rdf_format_validator(rdf_format)
+        """
+        Validate the RDF format -
+        all methods utilise the `generate_string` static method,
+        so this will always be called
+        `PersistenceSystem.rdf_format_validator(rdf_format)`.
+        """
         if leading_comments is None:
             return g.serialize(format=rdf_format)
-        else:
-            PersistenceSystem.leading_comment_validator(leading_comments, rdf_format)
-            content = "".join(f"# {comment}\n" for comment in leading_comments)
-            # add a new line after the leading comments
-            content += "\n"
-            content += g.serialize(format=rdf_format)
-            return content
+        PersistenceSystem.leading_comment_validator(leading_comments, rdf_format)
+        content = "".join(f"# {comment}\n" for comment in leading_comments)
+        # add a new line after the leading comments
+        content += "\n"
+        content += g.serialize(format=rdf_format)
+        return content
 
 
 class String(PersistenceSystem):
@@ -159,7 +149,7 @@ class File(PersistenceSystem):
         super().__init__()
 
         if not isinstance(directory, (Path, str)):
-            raise ValueError(f"The file path must be a string or pathlib Path")
+            raise ValueError("The file path must be a string or pathlib Path")
         self.directory = Path(directory).resolve()
 
         if not self.directory.is_dir():
@@ -171,9 +161,7 @@ class File(PersistenceSystem):
         :param graph_name: The key of the object on disk
         :return: boolean
         """
-        if Path(self.directory / graph_name).exists():
-            return True
-        return False
+        return Path(self.directory / graph_name).exists()
 
     def read(self, filename: str, rdf_format: RDF_FORMATS = "turtle"):
         leading_comments = []
@@ -305,9 +293,7 @@ class S3(PersistenceSystem):
         response = client.put_object(Body=bytes_obj, Bucket=self.bucket, Key=filename)
         if response["ResponseMetadata"]["HTTPStatusCode"] == HTTPStatus.OK:
             return filename
-        else:
-            response.raise_for_status()
-
+        response.raise_for_status()
 
 class GraphDB(PersistenceSystem):
     """
@@ -336,7 +322,7 @@ class GraphDB(PersistenceSystem):
             )
 
         if repo_id is None:
-            raise ValueError(f"The value you supplied for repo_id cannot be None")
+            raise ValueError("The value you supplied for repo_id cannot be None")
 
         self.location = location
         self.repo_id = repo_id
@@ -382,7 +368,7 @@ class Fuseki(PersistenceSystem):
             )
 
         if repo_id is None:
-            raise ValueError(f"The value you supplied for repo_id cannot be None")
+            raise ValueError("The value you supplied for repo_id cannot be None")
 
         self.location = location
         self.repo_id = repo_id
@@ -462,12 +448,12 @@ class SOP(PersistenceSystem):
         if self.local:
             headers["Cookie"] = "username=Administrator"
         if graph_iri.startswith("urn:x-evn-tag"):
-            projectGraph = SOP.graph_from_workflow(graph_iri)
+            project_graph = SOP.graph_from_workflow(graph_iri)
         else:
-            projectGraph = graph_iri
+            project_graph = graph_iri
         form_data = {
             "_viewClass": "http://topbraid.org/teamwork#ImportRDFFileService",
-            "projectGraph": projectGraph,
+            "projectGraph": project_graph,
             "_base": graph_iri,
             "format": "turtle",
         }
@@ -484,8 +470,7 @@ class SOP(PersistenceSystem):
             raise Exception(
                 f"Error writing to SOP. Status code: {response.status_code}. Response: {response.text}"
             )
-        else:
-            return parse_qs(response.text)["message"][0]
+        return parse_qs(response.text)["message"][0]
 
     def read_deprecated(
         self, query, graph_iri, return_format: Optional[str] = "application/rdf+xml"
@@ -515,13 +500,13 @@ class SOP(PersistenceSystem):
                 response = self.client.get(
                     self.location
                     + f"/service/{graph_iri.split(':')[2]}/tbs/exportRDFFile?format={rdf_format}",
-                    headers={"Cookie": f"username=Administrator"},
+                    headers={"Cookie": "username=Administrator"},
                 )
             elif graph_iri.startswith("urn:x-evn-tag"):
                 response = self.client.get(
                     self.location
                     + f"/service/{graph_iri.split(':')[2]}.{graph_iri.split(':')[3]}/tbs/exportRDFFile?format={rdf_format}",
-                    headers={"Cookie": f"username=Administrator"},
+                    headers={"Cookie": "username=Administrator"},
                 )
             else:
                 raise NotImplemented(
@@ -593,7 +578,7 @@ class SOP(PersistenceSystem):
         self,
         datagraph_name: Optional[str] = None,
         description: Optional[str] = None,
-        subjectArea: Optional[str] = None,
+        subject_area: Optional[str] = None,
         default_namespace: Optional[str] = None,
         headers: Optional[dict] = None,
     ):
@@ -608,17 +593,17 @@ class SOP(PersistenceSystem):
                     " ", "_"
                 )
             )
-        if not subjectArea:
-            subjectArea = ""
+        if not subject_area:
+            subject_area = ""
         if not description:
             description = ""
         # prepare the query
         if self.local:
-            headers = {"Cookie": f"username=Administrator"}
+            headers = {"Cookie": "username=Administrator"}
         form_data = {
             "_viewClass": "http://topbraid.org/teamwork#CreateProjectService",
             "projectType": "http://teamwork.topbraidlive.org/datagraph/datagraphprojects#ProjectType",
-            "subjectArea": subjectArea,
+            "subjectArea": subject_area,
             "name": datagraph_name,
             "defaultNamespace": default_namespace,
             "comment": description,
@@ -665,7 +650,7 @@ class SOP(PersistenceSystem):
         self,
         manifest_name: Optional[str] = None,
         description: Optional[str] = None,
-        subjectArea: Optional[str] = None,
+        subject_area: Optional[str] = None,
         default_namespace: Optional[str] = None,
         headers: Optional[dict] = None,
     ):
@@ -686,8 +671,8 @@ class SOP(PersistenceSystem):
                     " ", "_"
                 )
             )
-        if not subjectArea:
-            subjectArea = ""
+        if not subject_area:
+            subject_area = ""
         if not description:
             description = ""
 
@@ -699,7 +684,7 @@ class SOP(PersistenceSystem):
             ],
             "name": manifest_name,
             "defaultNamespace": default_namespace,
-            "subjectArea": subjectArea,
+            "subjectArea": subject_area,
             "comment": description,
         }
 
@@ -712,7 +697,7 @@ class SOP(PersistenceSystem):
         self,
         file_path: Optional[Path] = None,
         description: Optional[str] = None,
-        subjectArea: Optional[str] = None,
+        subject_area: Optional[str] = None,
         default_namespace: Optional[str] = None,
         headers: Optional[dict] = None,
     ):
@@ -767,10 +752,7 @@ class SOP(PersistenceSystem):
             self._create_client()
 
         if graph_name.startswith("urn:x-evn-tag"):
-            if not self.asset_exists(self.graph_from_workflow(graph_name)):
-                return False
-            else:
-                return True
+            return self.asset_exists(self.graph_from_workflow(graph_name))
         query = f"ASK WHERE {{GRAPH <{graph_name}> {{?s ?p ?o}} }}"
         response = self.client.post(
             self.location + "/sparql",
@@ -807,13 +789,11 @@ class SOP(PersistenceSystem):
                 return response_dict
         elif "error" in keys:
             raise ValueError(response_dict["error"])
-        else:
-            if response.status_code == 200:
-                return "Successful transaction - no response returned from EDG"
-            else:
-                raise Exception(
-                    f"Failed to create {form_data['name']} graph on SOP.\nError: {response.text}"
-                )
+        if response.status_code == 200:
+            return "Successful transaction - no response returned from EDG"
+        raise Exception(
+            f"Failed to create {form_data['name']} graph on SOP.\nError: {response.text}"
+        )
 
     def _close(self):
         self.client.get(self.location + "/purgeuser?app=edg")
@@ -823,27 +803,26 @@ class SOP(PersistenceSystem):
         self.client = httpx.Client(cookies={"username": self.username})
         self.client.get(self.location)
         if self.location.startswith("http://localhost"):
-            return True  # auth is not required
-        else:
-            auth_response = self.client.post(
-                self.location + "/j_security_check",
-                data={
-                    "j_username": self.username,
-                    "j_password": self.password,
-                    "login": "LOGIN",
-                },
-                headers={"Accept": "text/html"},
-            )
-            if auth_response.text:
-                if test_connection:
-                    return auth_response.text
-                else:
-                    raise ValueError(auth_response.text)
-            return True
+            return True # auth is not required
+        auth_response = self.client.post(
+            self.location + "/j_security_check",
+            data={
+                "j_username": self.username,
+                "j_password": self.password,
+                "login": "LOGIN",
+            },
+            headers={"Accept": "text/html"},
+        )
+        if auth_response.text:
+            if test_connection:
+                return auth_response.text
+            raise ValueError(auth_response.text)
 
     @staticmethod
     def graph_from_workflow(workflow_graph):
-        # example input workflow: "urn:x-evn-tag:datagraph_name:workflow_name:Administrator"
+        """
+        Example input workflow: "urn:x-evn-tag:datagraph_name:workflow_name:Administrator"
+        """
         if not workflow_graph.startswith("urn:x-evn-tag"):
             raise ValueError(
                 "The workflow graph passed does not start with 'x-evn-tag' - it does not look like a SOP "
@@ -855,7 +834,9 @@ class SOP(PersistenceSystem):
 
     @staticmethod
     def tag_from_workflow(workflow_graph):
-        # example input workflow: "urn:x-evn-tag:datagraph_name:workflow_name:Administrator"
+        """
+        Example input workflow: "urn:x-evn-tag:datagraph_name:workflow_name:Administrator"
+        """
         if not workflow_graph.startswith("urn:x-evn-tag"):
             raise ValueError(
                 "The workflow graph passed does not start with 'x-evn-tag' - it does not look like a SOP "
@@ -879,7 +860,7 @@ def prepare_files_list(files: Union[str, list, Path]) -> list:
         fp = Path(file)
         if fp.is_dir():
             for file_type in RDF_FILE_ENDINGS.keys():
-                files_list.extend([file for file in fp.glob("*" + file_type)])
+                files_list.extend(list(fp.glob("*" + file_type)))
         elif fp.is_file():
             files_list.append(fp)
     return files_list

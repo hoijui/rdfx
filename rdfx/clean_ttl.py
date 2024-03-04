@@ -1,5 +1,5 @@
-from rdfx_cli import clean_ttl as clean_ttl
 from pathlib import Path
+from rdfx_cli import clean_ttl
 
 if __name__ == "__main__":
     inputPath = Path('./test.ttl')
