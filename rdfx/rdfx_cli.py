@@ -76,7 +76,7 @@ def merge(
 def persist_to(persistence_system: PersistenceSystem, g: Graph):
     if not issubclass(type(persistence_system), PersistenceSystem):
         raise ValueError(
-            "You must select of the the subclasses of PersistenceSystem to use for the persistence_system argument"
+            "You must select one of the subclasses of PersistenceSystem to use for the persistence_system argument"
         )
     persistence_system.write(g)
 
