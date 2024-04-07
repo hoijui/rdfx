@@ -5,59 +5,59 @@
 A small Python utility to convert, merge, and read/persist RDF data
 in different formats, across different "persistence systems".
 
-## How to Use
+### Installation
 
-The command line utility covers merge and conversion functionality,
-and simplifies certain aspects of this.
-
-### Python
-
-Run the `rdfx.py` script with Python,
-having installed the required packages found in _requirements.txt_,
-for example with `pip install -r requirements.txt`.
-
-### BASH (Linux, Mac, etc.)
-
-To utilise the command line util run:
+To utilise the command line util,
+you first have to install it.
+From the root of a local checkout of this repository, run:
 
 ```shell
-python rdfx.py *args
+pip install .
+```
+
+### Usage
+
+Once you have [installed](#installation) it,
+you should be able to run it like this:
+
+```shell
+rdfx *args
 ```
 
 To convert a file:
 
 ```shell
-python rdfx.py convert myfile.ttl -f nt -o output_dir
+rdfx convert myfile.ttl -f nt -o output_dir
 ```
 
 For multiple files:
 
 ```shell
-python rdfx.py convert myfile1.ttl myfile2.ttl -f nt -o output_dir
+rdfx convert myfile1.ttl myfile2.ttl -f nt -o output_dir
 ```
 
 A directory of files:
 
 ```shell
-python rdfx.py convert files_dir -f nt -o output_dir
+rdfx convert files_dir -f nt -o output_dir
 ```
 
 To merge multiple files:
 
 ```shell
-python rdfx.py merge myfile1.ttl myfile2.ttl -f nt -o output_dir
+rdfx merge myfile1.ttl myfile2.ttl -f nt -o output_dir
 ```
 
 To merge a directory of files:
 
 ```shell
-python rdfx.py merge files_dir -f nt -o output_dir
+rdfx merge files_dir -f nt -o output_dir
 ```
 
 To remove sort and remove unused prefixes in a turtle file:
 
 ```shell
-python rdfx.py clean myfile.ttl
+rdfx clean myfile.ttl
 ```
 
 To simplify usage of the command line utility at present,
@@ -89,16 +89,17 @@ to/from [EDG] master graphs and workflows.
 The [SOP] persistence system can be instantiated
 with the following optional parameters:
 
-1. location, defaults to "http://localhost:8083"
+1. location, defaults to <http://localhost:8083>
 2. username, defaults to "Administrator"
 3. password, defaults to ""
 4. timeout, defaults to 60 seconds
-    Example instantiation with defaults:
 
-    ```python
-    from rdfx.persistence_systems import SOP
-    local_sop_ps = SOP()
-    ```
+Example instantiation with defaults:
+
+```python
+from rdfx.persistence_systems import SOP
+local_sop_ps = SOP()
+```
 
 The following methods are available on instances of the SOP class:
 
@@ -113,13 +114,13 @@ The following methods are available on instances of the SOP class:
 | create_manifest       | manifest_name (optional)<br/> description (optional)<br/> subjectArea (optional)<br/> default_namespace (optional)<br/> HTTP headers (optional)<br/> | the IRI for the manifest          |
 | asset_exists          | graph_name                                                                                                                                           | true/false                        |
 
-### Command line tool documentation
+### Documentation
 
 These usage notes come from running the help command in the tool,
-e.g. `python rdfx.ph -h`:
+e.g. `rdfx -h`:
 
 ```text
-usage: rdfx.py [-h] [--format {ttl,turtle,json,json-ld,jsonld,owl,xml,rdf,nt,n3}] [-o OUTPUT] [--comments COMMENTS] {convert,merge} data [data ...]
+usage: rdfx [-h] [--format {ttl,turtle,json,json-ld,jsonld,owl,xml,rdf,nt,n3}] [-o OUTPUT] [--comments COMMENTS] {convert,merge} data [data ...]
 
 positional arguments:
   {convert,merge}
