@@ -2,16 +2,18 @@
 
 # rdfx
 
-A small Python utility to convert, merge, and read/persist RDF data in different formats, across different "persistence
-systems".
+A small Python utility to convert, merge, and read/persist RDF data
+in different formats, across different "persistence systems".
 
 ## How to Use
 
-The command line utility covers merge and conversion functionality, and simplifies certain aspects of this.
+The command line utility covers merge and conversion functionality,
+and simplifies certain aspects of this.
 
 ### Python
 
-Run the `rdfx.py` script with Python, having installed the required packages found in _requirements.txt_,
+Run the `rdfx.py` script with Python,
+having installed the required packages found in _requirements.txt_,
 for example with `pip install -r requirements.txt`.
 
 ### BASH (Linux, Mac, etc.)
@@ -58,26 +60,34 @@ To remove sort and remove unused prefixes in a turtle file:
 python rdfx.py clean myfile.ttl
 ```
 
-To simplify usage of the command line utility at present, the following behaviour has been set:
+To simplify usage of the command line utility at present,
+the following behaviour has been set:
 
 Type | Output Filenames
 ---|---
 Merge | merged.{format}
 Convert | file1.{format} file2.{format} ...
 
-That is, when merging, the output filename will be "merged", with the correct file format.
-When converting, the output filename will be the same as the input filename, with the correct file format.
-This behaviour simplifies input to the command line util, allowing multiple files and directories to be input without
-confusion as to which specified filenames are for input or output, and mappings between input and output, especially
+That is, when merging, the output filename will be "merged",
+with the correct file format.
+When converting, the output filename will be the same as the input filename,
+with the correct file format.
+This behaviour simplifies input to the command line util,
+allowing multiple files and directories to be input without
+confusion as to which specified filenames are for input or output,
+and mappings between input and output, especially
 directories or multiple files are converted/merged.
 
-The python utilities behind the command line tool can be configured to set user specified filenames, for these cases
-use Python.
+The python utilities behind the command line tool can be configured
+to set user specified filenames.
+For these cases, use Python.
 
 ### [SOP] / [EDG] usage
 
-The [SOP] persistence system can be used to read and write to/from [EDG] master graphs and workflows.
-The [SOP] persistence system can be instantiated with the following optional parameters:
+The [SOP] persistence system can be used to read and write
+to/from [EDG] master graphs and workflows.
+The [SOP] persistence system can be instantiated
+with the following optional parameters:
 
 1. location, defaults to "http://localhost:8083"
 2. username, defaults to "Administrator"
@@ -105,7 +115,8 @@ The following methods are available on instances of the SOP class:
 
 ### Command line tool documentation
 
-These usage notes come from running the help command in the tool, e.g. `python rdfx.ph -h`:
+These usage notes come from running the help command in the tool,
+e.g. `python rdfx.ph -h`:
 
 ```text
 usage: rdfx.py [-h] [--format {ttl,turtle,json,json-ld,jsonld,owl,xml,rdf,nt,n3}] [-o OUTPUT] [--comments COMMENTS] {convert,merge} data [data ...]
