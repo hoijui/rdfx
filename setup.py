@@ -28,7 +28,7 @@ setup(
     author_email="nicholas.car@surroundaustralia.com",
     maintainer="David Habgood",
     maintainer_email="david.habgood@surroundaustralia.com",
-    url="https://github.com/surroundaustralia/rdfx",
+    url="https://github.com/hoijui/rdfx",
     license=LICENSE,
     packages=PACKAGES,
     platforms=["any"],
