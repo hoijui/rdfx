@@ -49,6 +49,7 @@ setup(
         "Operating System :: OS Independent",
         "Natural Language :: English",
     ],
+    python_requires='>=3.7',
     tests_require=["pytest"],
     test_suite="tests",
 )
