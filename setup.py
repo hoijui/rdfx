@@ -56,11 +56,16 @@ setup(
     #      While we should maintain the minimum requried versions here,
     #      we might want to promote more recent versions in 'requirements.txt'.
     install_requires=[
-        'boto3>=1.21.15',
+        'boto3>=1.20.20',
         'botocore>=1.24.15',
-        'httpx>=0.20.0',
-        'rdflib>=6.1.1'
+        'httpx>=0.23.0',
+        'rdflib>=6.0.2'
         ],
-    tests_require=["pytest"],
+    tests_require=[
+        'pytest>=6.2.5',
+        'moto>=2.2.9',
+        'pytest-asyncio>=0.16.0',
+        'twine>=4.0.1'
+        ],
     test_suite="tests",
 )
