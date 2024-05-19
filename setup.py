@@ -1,20 +1,26 @@
 from setuptools import setup
+from os import path
+import re
 
 
-def get_version():
-    from pathlib import Path
+def find_version(filename):
+    """ Find the embedded version string in the package source. """
+    _version_re = re.compile(r"__VERSION__ *= *'(.*)'", re.IGNORECASE)
+    for line in open(filename):
+        version_match = _version_re.match(line)
+        if version_match:
+            return version_match.group(1)
 
-    init_path = Path("rdfx/__init__.py")
 
-    with init_path.open() as file_:
-        for line in file_.readlines():
-            if line.startswith("__version__"):
-                return line.split('"')[1]
-
+NAME = 'rdfx'
+HERE = path.abspath(path.dirname(__file__))
+VERSION = find_version(path.join(HERE, ('%s/__init__.py' % NAME)))
+PACKAGES = [NAME]
+LICENSE = "BSD"
 
 setup(
-    name="rdfx",
-    version=get_version(),
+    name=NAME,
+    version=VERSION,
     description="Tools for converting, merging, persisting and reading RDF data in different formats.",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -23,8 +29,8 @@ setup(
     maintainer="David Habgood",
     maintainer_email="david.habgood@surroundaustralia.com",
     url="https://github.com/surroundaustralia/rdfx",
-    license="BSD",
-    packages=["rdfx"],
+    license=LICENSE,
+    packages=PACKAGES,
     platforms=["any"],
     classifiers=[
         "Programming Language :: Python",
@@ -32,11 +38,11 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: %s License" % LICENSE,
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Operating System :: OS Independent",
         "Natural Language :: English",
     ],
-    test_suite="tests",
     tests_require=["pytest"],
+    test_suite="tests",
 )
