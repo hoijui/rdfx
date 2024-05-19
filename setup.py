@@ -50,6 +50,17 @@ setup(
         "Natural Language :: English",
     ],
     python_requires='>=3.7',
+    # NOTE While this is the same info as in 'requirements.txt',
+    #      we should still maintain them separately,
+    #      see <https://stackoverflow.com/questions/14399534/reference-requirements-txt-for-the-install-requires-kwarg-in-setuptools-setup-py>.
+    #      While we should maintain the minimum requried versions here,
+    #      we might want to promote more recent versions in 'requirements.txt'.
+    install_requires=[
+        'boto3>=1.21.15',
+        'botocore>=1.24.15',
+        'httpx>=0.20.0',
+        'rdflib>=6.1.1'
+        ],
     tests_require=["pytest"],
     test_suite="tests",
 )
